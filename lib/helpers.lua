@@ -10,6 +10,11 @@ function helpers.collide( a, b )
    return overlap
 end
 
+function helpers.collidexy( a, b )
+  if not( a.x + a.width < b.x  or b.x + b.width < a.x)  and not(a.y + a.height < b.y or b.y + b.height < a.y ) then
+    return not(a.x + a.width < b.x  or b.x + b.width < a.x), not(a.y + a.height < b.y or b.y + b.height < a.y)
+  else return false,false end
+end
 
 function helpers.rotate(rad, angle, x, y)
   return({
@@ -90,8 +95,8 @@ function helpers.updatemouse()
     mouse.altpress = 0
   end
   
-  mouse.x = helpers.round(((love.mouse.getX()/love.graphics.getWidth())*160),true)
-  mouse.y = helpers.round(((love.mouse.getY()/love.graphics.getHeight())*90),true)
+  mouse.x = helpers.round(((love.mouse.getX()/love.graphics.getWidth())*project.res.x),true)
+  mouse.y = helpers.round(((love.mouse.getY()/love.graphics.getHeight())*project.res.y),true)
 end
 
 
@@ -103,6 +108,10 @@ end
 
 function helpers.lerp(a, b, t)
   return a + (b - a) * t
+end
+
+function helpers.map(x, in_min, in_max, out_min, out_max)
+  return out_min + ((out_max - out_min) / (in_max - in_min)) * (x - in_min)
 end
 
 helpers.eases = {
@@ -290,21 +299,34 @@ end
 function helpers.iscursorinellipse(x1,x2,y1,y2,cursorx,cursory)
 end
 
-function helpers.copy(t)
-  local t2 = {}
-  for k,v in pairs(t) do
-    t2[k] = v
+function helpers.copy(orig, copies)
+  copies = copies or {}
+  local orig_type = type(orig)
+  local copy
+  if orig_type == 'table' then
+    if copies[orig] then
+      copy = copies[orig]
+    else
+      copy = {}
+      copies[orig] = copy
+      for orig_key, orig_value in next, orig, nil do
+        copy[helpers.copy(orig_key, copies)] = helpers.copy(orig_value, copies)
+      end
+      setmetatable(copy, helpers.copy(getmetatable(orig), copies))
+    end
+  else -- number, string, boolean, etc
+    copy = orig
   end
-  return t2
-
+  return copy
 end
+
 
 function helpers.drawbordered(df,bcol,lightborder)
   bcol = bcol or 'black'
   if bcol == 'black' then
     love.graphics.setColor({0,0,0,1})
   else
-    love.graphics.setShader(whiteoutshader)
+    love.graphics.setShader(shaders.whiteout)
   end
   
   for x=-1,1 do
@@ -323,6 +345,28 @@ function helpers.drawbordered(df,bcol,lightborder)
   end
   df(0,0)
 
+end
+
+function helpers.circlimit(x,y,r)
+  local ox, oy = x,y
+  local len = math.sqrt(x^2 + y^2)
+  if len > r then
+    ox, oy = ox/ (len/r), oy / (len/r)
+  end
+  return ox,oy
+end
+
+function helpers.firstupper(str)
+    return str:gsub("^%1", string.upper)
+end
+
+function helpers.tablematch(val,t)
+  for i,v in ipairs(t) do
+    if v == val then
+      return true
+    end
+  end
+  return false
 end
 
 return helpers

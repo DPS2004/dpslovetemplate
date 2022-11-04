@@ -1,4 +1,6 @@
 function love.load()
+
+  dofile = function(fname) return love.filesystem.load(fname)() end
   
   dt = 1
   
@@ -11,8 +13,7 @@ function love.load()
   love.graphics.setLineJoin("miter")
   
   fonts ={
-    main = love.graphics.newFont("assets/fonts/Axmolotl.ttf", 16),
-    pico = love.graphics.newFont("assets/fonts/PICO-8 wide.ttf", 4)
+    main = love.graphics.newFont("assets/fonts/Axmolotl.ttf", 16)
   }
   
   -- font is https://tepokato.itch.io/axolotl-font
@@ -37,7 +38,6 @@ function love.load()
   -- localization
   loc = require "lib.loc"
   loc.load("data/localization.json")
-
   
 
   -- manages gamestates
@@ -46,9 +46,9 @@ function love.load()
   -- baton, manages input handling
   baton = require "lib/baton/baton"
 
-  shuv = require "lib.shuv"
-  shuv.init()
-  shuv.hackyfix()
+  --shuv = require "lib.shuv"
+  --shuv.init(project)
+  --shuv.hackyfix()
   
   -- what it says on the tin
   utf8 = require("utf8")
@@ -61,8 +61,19 @@ function love.load()
   te = require"lib.tesound"
 
 
+  -- jprof, profiling
+  
+  PROF_CAPTURE = project.doprofile
+  
+  prof = require "lib/profiling/jprof"
+  
+  prof.enabled(project.doprofile)
+  
+  if project.doprofile then
+    print("profiling enabled!")
+  end
 
-  -- lovebird,debugging console
+  -- lovebird, debugging console
   if (not project.release)  then 
     lovebird = require "lib/lovebird/lovebird"
   else
@@ -79,6 +90,8 @@ function love.load()
   flux = require "lib/flux/flux"
   
   rw = require "lib/ricewine"
+  
+  
   
   class = require "lib/middleclass/middleclass"
   
@@ -107,8 +120,8 @@ function love.load()
     self.fgdrawfunc = drawfunc
   end
   
-  function Gamestate:init()
-    self:initfunc()
+  function Gamestate:init(...)
+    self:initfunc(...)
   end
   
   function Gamestate:update(dt)
@@ -116,23 +129,43 @@ function love.load()
     lovebird.update()
     helpers.updatemouse()
     
+    prof.push("gamestate update")
     self:updatefunc(dt)
+    prof.pop("gamestate update")
     
+    prof.push("ricewine update")
+    rw:update()
+    prof.pop("ricewine update")
+    
+    prof.push("flux update")
     flux.update(dt)
+    prof.pop("flux update")
+    
+    prof.push("entityman update")
     em.update(dt)
+    prof.pop("entityman update")
+    
     te.cleanup()
   end
   
   
   function Gamestate:draw()
-    shuv.start()
+    --shuv.start()
     
+    prof.push("bg draw")
     self:bgdrawfunc()
+    prof.pop("bg draw")
     
+    prof.push("entityman draw")
     em.draw()
+    prof.pop("entityman draw")
+    
+    prof.push("fg draw")
     self:fgdrawfunc()
+    prof.pop("fg draw")
+    
     love.graphics.setColor(1,1,1,1)
-    shuv.finish()
+    --shuv.finish()
   end
   
   
@@ -174,7 +207,9 @@ function love.load()
   quads = require('preload.quads')
   
   
+  -- load shaderss
   
+  shaders = require('preload.shaders')
   
   --colors
   colors = require('preload.colors')
@@ -186,18 +221,6 @@ function love.load()
 
   
   
-  
-  whiteoutshader = love.graphics.newShader([[
-    
-  uniform vec4 colors[4];
-  
-  vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
-  {
-    float pixelalpha = Texel(tex, texture_coords).a;
-    return vec4(1,1,1,pixelalpha);
-  }
-    
-  ]])
   
   
   
@@ -216,48 +239,52 @@ function love.load()
   
   
   -- load savefile
-  local defaultsave = dpf.loadjson('data/defaultsave.json')
+  local defaultsave = dpf.loadjson(project.defaultsaveloc)
     
   if project.nosaves then
     savedata = defaultsave
   else
-    savedata = dpf.loadjson('savedata/main.sav',defaultsave)
+    savedata = dpf.loadjson(project.saveloc,defaultsave)
   end
   
   
   
   
   
-  savedata.timesbooted = savedata.timesbooted + 1
   
   sdfunc = {}
   function sdfunc.save()
-    dpf.savejson('savedata/main.sav',savedata)
+    dpf.savejson(project.saveloc,savedata)
   end
   
   function sdfunc.updatevol()
-    te.volume('sfx',savedata.options.audio.sfxvolume/10)
-    te.volume('music',savedata.options.audio.sfxvolume/10)
+    if project.name ~= 'roomedit' then
+      te.volume('sfx',savedata.options.audio.sfxvolume/10)
+      te.volume('music',savedata.options.audio.sfxvolume/10)
+    end
   end
   
   sdfunc.updatevol()
   sdfunc.save()
 
-
   entities = {}
   -- load entities
   dofile('preload/entities.lua')
-  
   
   -- load states
 
   dofile('preload/states.lua')
   
+  
+  -- load levels
+  
+  
+  
   toswap = nil
   newswap = false
   
   cs = bs.load(project.initstate)
-  cs:init()
+cs:init()
   
 end
 
@@ -266,13 +293,13 @@ function love.textinput(t)
 end
 
 function love.update(d)
-  
+  prof.push("frame")
 
   if (not project.frameadvance) or maininput:pressed("k1") or maininput:down("k2") then
     debugprint = true
 
-    shuv.check()
-    if not acdelt then
+    --shuv.check()
+    if not project.acdelt then
       dt = 1
     else
       dt = d * 60
@@ -294,4 +321,14 @@ end
 function love.draw()
   cs:draw()
   debugprint = false
+  prof.pop("frame")
+end
+
+
+
+function love.quit()
+  if project.doprofile then
+    print('saving profile')
+    prof.write("prof.mpack")
+  end
 end
