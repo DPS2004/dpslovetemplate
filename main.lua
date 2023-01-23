@@ -85,7 +85,7 @@ function love.load()
   em = require "lib.entityman"
 
   -- spritesheet manager
-  ez = require "lib.ezanim"
+  ez = require "lib.ezanim_rewrite"
 
   -- tween manager
   flux = require "lib/flux/flux"
@@ -205,7 +205,7 @@ function love.load()
   sprites = require('preload.sprites')
   
   -- make ezanim templates
-  templates = require('preload.templates')
+  animations = require('preload.animations')
 
   
   -- make quads

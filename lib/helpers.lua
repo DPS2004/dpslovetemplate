@@ -95,8 +95,8 @@ function helpers.updatemouse()
     mouse.altpress = 0
   end
   
-  mouse.x = helpers.round(((love.mouse.getX()/love.graphics.getWidth())*project.res.x),true)
-  mouse.y = helpers.round(((love.mouse.getY()/love.graphics.getHeight())*project.res.y),true)
+  mouse.x = (love.mouse.getX()/love.graphics.getWidth())
+  mouse.y = (love.mouse.getY()/love.graphics.getHeight())
 end
 
 
@@ -367,6 +367,12 @@ function helpers.tablematch(val,t)
     end
   end
   return false
+end
+
+function helpers.startswith(str,start)
+  if string.sub(str,1,#start) == start then
+    return string.sub(str,#start+1,-1)
+  end
 end
 
 return helpers

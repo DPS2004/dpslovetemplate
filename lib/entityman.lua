@@ -20,9 +20,14 @@ function em.init(en,kvtable)
 --    new[k] = v
 --  end
 --  new.name = en
-  table.insert(entities,new)
+  if (not new.skipupdate) or (not new.skiprender) then
+    table.insert(entities,new)
+    return entities[#entities]
+  else
+    return new
+  end
 
-  return entities[#entities]
+ 
 end
 
 
