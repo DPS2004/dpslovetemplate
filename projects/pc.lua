@@ -10,17 +10,15 @@ project.initstate = 'template'
 
 project.res = {}
 
-project.res.x = 1280
-project.res.y = 720
+project.res.useshuv = true
 
+project.res.x = 352
+project.res.y = 198
+project.res.s = 4
 
 project.fullscreen = false
 
-project.intscale = 2
-
--- project.res.x = 352 * 3
--- project.res.y = 198 * 3
--- project.res.s = 1
+project.intscale = 1
 
 project.ctrls = {
   left = {"key:a",  "axis:leftx-", "button:dpleft"},

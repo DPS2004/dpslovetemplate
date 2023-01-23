@@ -46,10 +46,11 @@ function love.load()
   -- baton, manages input handling
   baton = require "lib/baton/baton"
 
-  --shuv = require "lib.shuv"
-  --shuv.init(project)
-  --shuv.hackyfix()
-  
+  if project.res.useshuv then
+    shuv = require "lib.shuv"
+    shuv.init(project)
+    shuv.hackyfix()
+  end
   -- what it says on the tin
   utf8 = require("utf8")
 
@@ -150,7 +151,9 @@ function love.load()
   
   
   function Gamestate:draw()
-    --shuv.start()
+    if project.res.useshuv then
+      shuv.start()
+    end
     
     prof.push("bg draw")
     self:bgdrawfunc()
@@ -165,7 +168,10 @@ function love.load()
     prof.pop("fg draw")
     
     love.graphics.setColor(1,1,1,1)
-    --shuv.finish()
+    
+    if project.res.useshuv then
+      shuv.finish()
+    end
   end
   
   
@@ -298,7 +304,9 @@ function love.update(d)
   if (not project.frameadvance) or maininput:pressed("k1") or maininput:down("k2") then
     debugprint = true
 
-    --shuv.check()
+    if project.res.useshuv then
+      shuv.check()
+    end
     if not project.acdelt then
       dt = 1
     else

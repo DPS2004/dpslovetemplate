@@ -71,12 +71,14 @@ end
 
 function shuv.check()
   if not ismobile then
+		--[[
     if maininput:pressed("k3") then
       shuv.internal_rescale(shuv.internal_scale - 1)
     end
     if maininput:pressed("k4") then
       shuv.internal_rescale(shuv.internal_scale + 1)
     end
+		]]--
     if maininput:pressed("f5") then
       shuv.scale = shuv.scale + 1
       if shuv.scale > 7 then
