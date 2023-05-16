@@ -48,10 +48,10 @@ function ezanim:new(image,properties)
 	end
 	
 	local allframes = {}
-	for i=0,anim.frames do
+	for i=0,anim.frames -1 do
 		table.insert(allframes,i)
 	end
-	anim:addstate('all',allframes)
+	anim:addstate('all',allframes,properties.speed,properties.loop)
 	
 	function anim:draw(frame,x,y,r,sx,sy,ox,oy,kx,ky)
 		love.graphics.draw(self.image,self.quads[frame],x,y,r,sx,sy,ox,oy,kx,ky)
@@ -112,6 +112,11 @@ function ezanim:instance(anim,state)
 	function inst:draw(x,y,r,sx,sy,ox,oy,kx,ky)
 		self.anim:drawstate(self.state,self.frame,x,y,r,sx,sy,ox,oy,kx,ky)
 	end
+	
+	function inst:drawframe(frame,x,y,r,sx,sy,ox,oy,kx,ky)
+		self.anim:draw(frame,x,y,r,sx,sy,ox,oy,kx,ky)
+	end
+	
 	return inst
 	
 end

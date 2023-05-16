@@ -21,7 +21,7 @@ end
 function Exampleentity:update(dt)
   prof.push("example update")
   self.sinetimer = self.sinetimer + dt/60
-  --self.r = math.sin(self.sinetimer)*20
+  self.r = math.sin(self.sinetimer)*20
   prof.pop("example update")
 end
 
